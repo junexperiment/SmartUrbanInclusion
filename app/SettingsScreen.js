@@ -1,7 +1,7 @@
 // --- app/SettingsScreen.js ---
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 
 // --- Component for a Single Settings Row ---
@@ -30,7 +30,6 @@ const SettingsRow = ({ iconName, label, type = 'link', value, onToggle, onPress,
     );
 };
 
-
 const SettingsScreen = () => {
     const router = useRouter(); 
     
@@ -38,9 +37,22 @@ const SettingsScreen = () => {
     const [isLocationEnabled, setIsLocationEnabled] = useState(false);
     const [isVoiceControlEnabled, setIsVoiceControlEnabled] = useState(false);
 
-    // Navigation handlers
+    // FIX: Automatically reset the voice switch when the user navigates back
+    useFocusEffect(
+        useCallback(() => {
+            setIsVoiceControlEnabled(false);
+        }, [])
+    );
+
+    const handleVoiceToggle = (value) => {
+        setIsVoiceControlEnabled(value);
+        if (value) {
+            // Trigger the voice modal screen
+            router.push('VoiceControlModal');
+        }
+    };
+
     const handleNavigation = (screenName) => {
-        console.log(`Navigating to: ${screenName}`);
         router.push(screenName);
     };
 
@@ -95,12 +107,14 @@ const SettingsScreen = () => {
                     value={isLocationEnabled}
                     onToggle={setIsLocationEnabled}
                 />
+                
+                {/* Voice Control Toggle */}
                 <SettingsRow 
                     iconName="microphone" 
                     label="Voice Control" 
                     type="toggle"
                     value={isVoiceControlEnabled}
-                    onToggle={setIsVoiceControlEnabled}
+                    onToggle={handleVoiceToggle}
                     isLast={true} 
                 />
 
@@ -135,14 +149,12 @@ const SettingsScreen = () => {
     );
 };
 
-
 // --- STYLING (To match image_7cc6dc.png) ---
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5', // Light gray background
+        backgroundColor: '#F5F5F5',
     },
-    // Header Styles
     customHeader: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -165,7 +177,6 @@ const styles = StyleSheet.create({
     spacer: {
         flex: 1, 
     },
-    // Content Styles
     scrollContent: {
         paddingHorizontal: 20,
         paddingBottom: 100, 
@@ -178,14 +189,13 @@ const styles = StyleSheet.create({
         marginTop: 25,
         marginBottom: 10,
     },
-    // Settings Row Styles
     settingsRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingVertical: 15,
         paddingHorizontal: 10,
-        backgroundColor: '#FFF', // White background for the card/row
+        backgroundColor: '#FFF',
         borderBottomWidth: 1,
         borderBottomColor: '#EEE',
     },
